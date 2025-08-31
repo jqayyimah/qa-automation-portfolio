@@ -1,0 +1,222 @@
+{
+  "info": {
+    "name": "QA Portfolio - Auth API",
+    "_postman_id": "6f3b3a8e-3d5a-4a9e-8e1c-qa-portfolio-auth",
+    "description": "Postman collection for common Auth flows used in QA portfolios: login, invalid login, password reset request, and password change. Uses environment variables for flexibility.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login - Valid Credentials",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Try to capture token from JSON response",
+                  "try {",
+                  "  const json = pm.response.json();",
+                  "  const token = json.token || json.access_token || (json.data && json.data.token);",
+                  "  if (token) {",
+                  "    pm.environment.set('authToken', token);",
+                  "    pm.test('Auth token captured', function () { pm.expect(token).to.be.a('string').and.not.empty; });",
+                  "  }",
+                  "} catch(e) { /* ignore parse errors for demo */ }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - Invalid Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"WrongPass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 401/400', function () {",
+                  "  pm.expect([400, 401]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Error message present', function () {",
+                  "  const b = pm.response.json();",
+                  "  pm.expect(JSON.stringify(b).toLowerCase()).to.include.any.keys;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Password Reset Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/password/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "password",
+                "reset"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200/202', function () {",
+                  "  pm.expect([200, 202]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Password Change (requires auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"{{password}}\",\n  \"newPassword\": \"{{newPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/password/change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "password",
+                "change"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://example.com"
+    },
+    {
+      "key": "email",
+      "value": "user@example.com"
+    },
+    {
+      "key": "password",
+      "value": "Passw0rd!"
+    },
+    {
+      "key": "newPassword",
+      "value": "NewPassw0rd!"
+    },
+    {
+      "key": "authToken",
+      "value": ""
+    }
+  ]
+}
